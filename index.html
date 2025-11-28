@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kimi AI Chatbot</title>
+
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #0d0d0d;
+      padding: 20px;
+      color: white;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 550px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 15px;
+      color: #00d4ff;
+      letter-spacing: 1px;
+    }
+
+    #chatbox {
+      width: 100%;
+      height: 420px;
+      overflow-y: auto;
+      padding: 15px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .msg {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: 14px;
+      line-height: 1.4;
+      font-size: 15px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* USER MESSAGE */
+    .user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, #00d4ff, #0077ff);
+      color: white;
+      box-shadow: 0 0 10px rgba(0,150,255,0.5);
+    }
+
+    /* BOT MESSAGE */
+    .bot {
+      align-self: flex-start;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      backdrop-filter: blur(6px);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Input Section */
+    .inputArea {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    #inputBox {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      outline: none;
+      font-size: 15px;
+    }
+
+    #sendBtn {
+      padding: 12px 20px;
+      background: #00d4ff;
+      border: none;
+      color: black;
+      border-radius: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    #sendBtn:hover {
+      background: #11e0ff;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Shanu Ai</h2>
+
+    <div id="chatbox"></div>
+
+    <div class="inputArea">
+      <input type="text" id="inputBox" placeholder="Type a message..." />
+      <button id="sendBtn">Send</button>
+    </div>
+  </div>
+
+<script>
+  const API_KEY = "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";
+  const MODEL = "moonshotai/Kimi-K2-Instruct-0905";
+
+  const chatbox = document.getElementById("chatbox");
+  const inputBox = document.getElementById("inputBox");
+  const sendBtn = document.getElementById("sendBtn");
+
+  sendBtn.onclick = sendMessage;
+
+  function addMessage(text, sender) {
+    const div = document.createElement("div");
+    div.className = "msg " + sender;
+    div.innerText = text;
+    chatbox.appendChild(div);
+    chatbox.scrollTop = chatbox.scrollHeight;
+  }
+
+  async function sendMessage() {
+    const userText = inputBox.value.trim();
+    if (!userText) return;
+
+    addMessage(userText, "user");
+    inputBox.value = "";
+
+    addMessage("Typing...", "bot");
+
+    const response = await fetch("https://router.huggingface.co/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + API_KEY
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        temperature: 0.2,
+        messages: [
+          {
+            role: "system",
+            content:
+              "Your name is Shanu. You were created by Shiva Saini. If anyone asks your name, identity, creator, owner, about you, or who made you, ALWAYS reply exactly: 'My name is Shanu and I was created by Shiva Saini.' Do NOT mention the model name, Kimi, Moonshot, API, or anything else."
+          },
+          { role: "user", content: userText }
+        ]
+      })
+    });
+
+    const data = await response.json();
+    document.querySelector(".bot:last-child").remove();
+
+    const botReply = data?.choices?.[0]?.message?.content || "Error!";
+    addMessage(botReply, "bot");
+  }
+</script>
+</body>
+</html>
